@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디지털새싹 RL 자율주행 챌린지 - 올라운드 대진 대시보드</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-yellow: #f59e0b;
+            --accent-purple: #a855f7;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .header h1 {
+            font-size: 1.9rem;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+        }
+
+        /* Rules Banner */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .rule-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .rule-card h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rule-card.complete h3 { color: var(--accent-green); }
+        .rule-card.safety h3 { color: var(--accent-yellow); }
+        .rule-card.speed h3 { color: var(--accent-blue); }
+        .rule-card.overall h3 { color: var(--accent-purple); }
+
+        .rule-card p {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            line-height: 1.45;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            border-color: var(--accent-blue);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: #0f172a;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        .tab-btn.summary-tab {
+            margin-left: auto;
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+
+        .tab-btn.summary-tab.active {
+            background: var(--accent-purple);
+            color: #fff;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+        }
+
+        /* Section Layout */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th {
+            background: #0f172a;
+            color: var(--accent-blue);
+            padding: 14px 10px;
+            font-size: 0.9rem;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        th.purple-header {
+            color: var(--accent-purple);
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .team-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-main);
+        }
+
+        /* Inputs */
+        select, input[type="number"] {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 110px;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .score-cell {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .total-score {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--accent-yellow);
+        }
+
+        .grand-total {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--accent-green);
+        }
+
+        /* Rank Badge */
+        .rank-badge {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 50%;
+            background: #334155;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .rank-1 { background: #eab308; color: #000; box-shadow: 0 0 10px rgba(234, 179, 8, 0.6); }
+        .rank-2 { background: #94a3b8; color: #000; }
+        .rank-3 { background: #b45309; color: #fff; }
+
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: var(--accent-blue);
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+        }
+
+        .btn-secondary:hover {
+            color: var(--text-main);
+            border-color: var(--text-sub);
+        }
+
+        .track-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header h1 { font-size: 1.4rem; }
+            th, td { padding: 8px 4px; font-size: 0.8rem; }
+            select, input[type="number"] { padding: 6px; font-size: 0.8rem; }
+            .tabs { flex-wrap: wrap; }
+            .tab-btn.summary-tab { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <span class="badge">DIGITAL SAESEAK RL CAR CHALLENGE</span>
+        <h1>🏁 AI 자율주행 4개 트랙 풀리그(Full-League) 대시보드</h1>
+        <p>4개 팀이 서로 다른 4개 트랙을 모두 주행하여 얻은 종합 점수로 최종 우승팀을 가립니다.</p>
+    </div>
+
+    <!-- Rule Cards -->
+    <div class="rules-grid">
+        <div class="rule-card complete">
+            <h3>🏁 트랙당 완주 (50점)</h3>
+            <p>• 완주 성공: <strong>50점</strong> | 미완주: <strong>0점</strong><br>※ 복귀 3회 이내 도착 시 완주 인정</p>
+        </div>
+        <div class="rule-card safety">
+            <h3>🛡️ 트랙당 안정성 (30점)</h3>
+            <p>• 이탈 0회: <strong>30점</strong> | 1회: <strong>25점</strong> | 2회: <strong>20점</strong><br>• 3회: <strong>15점</strong> | 4회: <strong>10점</strong> | 5회: <strong>5점</strong> (6회 이상 0점)</p>
+        </div>
+        <div class="rule-card speed">
+            <h3>⚡ 트랙당 속도 (20점)</h3>
+            <p>• 해당 트랙 최단시간 팀: <strong>20점</strong><br>• 계산식: 20 × (해당트랙 최단기록 ÷ 우리팀 기록)</p>
+        </div>
+        <div class="rule-card overall">
+            <h3>🏆 최종 우승 (400점 만점)</h3>
+            <p>• 4개 트랙 점수 합산 (각 100점 만점)<br>• <strong>홈 트랙 + 타조 트랙 3개 범용성(Generalization) 종합 평가</strong></p>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('track1')">📍 트랙 1 (1조 홈)</button>
+        <button class="tab-btn" onclick="switchTab('track2')">📍 트랙 2 (2조 홈)</button>
+        <button class="tab-btn" onclick="switchTab('track3')">📍 트랙 3 (3조 홈)</button>
+        <button class="tab-btn" onclick="switchTab('track4')">📍 트랙 4 (4조 홈)</button>
+        <button class="tab-btn summary-tab" onclick="switchTab('summary')">🏆 최종 종합 순위</button>
+    </div>
+
+    <!-- Track 1 Content -->
+    <div id="track1" class="tab-content active">
+        <span class="track-badge">TRACK 1 RECORD</span>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>조</th>
+                        <th>완주 여부</th>
+                        <th>이탈(복귀) 횟수</th>
+                        <th>완주 시간(초)</th>
+                        <th>세부 점수 (완주/안정/속도)</th>
+                        <th>트랙 1 점수</th>
+                    </tr>
+                </thead>
+                <tbody id="track1-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Track 2 Content -->
+    <div id="track2" class="tab-content">
+        <span class="track-badge">TRACK 2 RECORD</span>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>조</th>
+                        <th>완주 여부</th>
+                        <th>이탈(복귀) 횟수</th>
+                        <th>완주 시간(초)</th>
+                        <th>세부 점수 (완주/안정/속도)</th>
+                        <th>트랙 2 점수</th>
+                    </tr>
+                </thead>
+                <tbody id="track2-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Track 3 Content -->
+    <div id="track3" class="tab-content">
+        <span class="track-badge">TRACK 3 RECORD</span>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>조</th>
+                        <th>완주 여부</th>
+                        <th>이탈(복귀) 횟수</th>
+                        <th>완주 시간(초)</th>
+                        <th>세부 점수 (완주/안정/속도)</th>
+                        <th>트랙 3 점수</th>
+                    </tr>
+                </thead>
+                <tbody id="track3-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Track 4 Content -->
+    <div id="track4" class="tab-content">
+        <span class="track-badge">TRACK 4 RECORD</span>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>조</th>
+                        <th>완주 여부</th>
+                        <th>이탈(복귀) 횟수</th>
+                        <th>완주 시간(초)</th>
+                        <th>세부 점수 (완주/안정/속도)</th>
+                        <th>트랙 4 점수</th>
+                    </tr>
+                </thead>
+                <tbody id="track4-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary Content -->
+    <div id="summary" class="tab-content">
+        <span class="track-badge" style="background: rgba(168, 85, 247, 0.2); color: var(--accent-purple);">TOTAL LEAGUE STANDINGS</span>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="purple-header">최종 순위</th>
+                        <th class="purple-header">팀명</th>
+                        <th>트랙 1 점수</th>
+                        <th>트랙 2 점수</th>
+                        <th>트랙 3 점수</th>
+                        <th>트랙 4 점수</th>
+                        <th class="purple-header">총 완주 횟수</th>
+                        <th class="purple-header">총 이탈 횟수</th>
+                        <th class="purple-header">종합 총점 (400점 만점)</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button class="btn btn-secondary" onclick="resetAll()">전체 기록 초기화</button>
+        <button class="btn" onclick="calculateAll()">전체 점수 집계 & 순위 갱신</button>
+    </div>
+</div>
+
+<script>
+    const teams = ["1조", "2조", "3조", "4조"];
+    const tracks = [1, 2, 3, 4];
+
+    function initTables() {
+        tracks.forEach(t => {
+            const tbody = document.getElementById(`track${t}-body`);
+            tbody.innerHTML = '';
+            
+            teams.forEach((team, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="team-name">${team} ${idx + 1 === t ? '<small style="color:var(--accent-blue);">(홈)</small>' : ''}</td>
+                    <td>
+                        <select id="t${t}-comp-${idx}" onchange="calculateAll()">
+                            <option value="Y">완주 (Y)</option>
+                            <option value="N" selected>미완주 (N)</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" id="t${t}-off-${idx}" min="0" max="10" value="0" oninput="calculateAll()">
+                    </td>
+                    <td>
+                        <input type="number" id="t${t}-time-${idx}" step="0.1" min="0" placeholder="예: 24.5" oninput="calculateAll()">
+                    </td>
+                    <td class="score-cell" id="t${t}-breakdown-${idx}">0 / 0 / 0</td>
+                    <td class="total-score" id="t${t}-score-${idx}">0점</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        updateSummaryTable();
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function calculateAll() {
+        let teamSummary = teams.map((team, idx) => ({
+            index: idx,
+            teamName: team,
+            trackScores: [0, 0, 0, 0],
+            completeCount: 0,
+            totalOffTrack: 0,
+            totalTime: 0,
+            grandTotal: 0
+        }));
+
+        // 各 트랙별 점수 계산
+        tracks.forEach((t, tIdx) => {
+            let minTime = Infinity;
+
+            // 1. 해당 트랙 최단 완주 시간 탐색
+            teams.forEach((_, i) => {
+                const comp = document.getElementById(`t${t}-comp-${i}`).value === 'Y';
+                const time = parseFloat(document.getElementById(`t${t}-time-${i}`).value) || 0;
+                if (comp && time > 0) {
+                    if (time < minTime) minTime = time;
+                }
+            });
+
+            // 2. 해당 트랙 조별 점수 계산
+            teams.forEach((_, i) => {
+                const comp = document.getElementById(`t${t}-comp-${i}`).value === 'Y';
+                const off = parseInt(document.getElementById(`t${t}-off-${i}`).value) || 0;
+                const time = parseFloat(document.getElementById(`t${t}-time-${i}`).value) || 0;
+
+                let compScore = comp ? 50 : 0;
+                let safetyScore = 0;
+                if (off === 0) safetyScore = 30;
+                else if (off === 1) safetyScore = 25;
+                else if (off === 2) safetyScore = 20;
+                else if (off === 3) safetyScore = 15;
+                else if (off === 4) safetyScore = 10;
+                else if (off === 5) safetyScore = 5;
+                else safetyScore = 0;
+
+                let speedScore = 0;
+                if (comp && time > 0 && minTime !== Infinity) {
+                    speedScore = Math.round((20 * (minTime / time)) * 10) / 10;
+                }
+
+                let trackTotal = Math.round((compScore + safetyScore + speedScore) * 10) / 10;
+
+                // DOM 업데이트
+                document.getElementById(`t${t}-breakdown-${i}`).innerText = `${compScore} / ${safetyScore} / ${speedScore}`;
+                document.getElementById(`t${t}-score-${i}`).innerText = `${trackTotal}점`;
+
+                // 집계 데이터 누적
+                teamSummary[i].trackScores[tIdx] = trackTotal;
+                if (comp) teamSummary[i].completeCount += 1;
+                teamSummary[i].totalOffTrack += off;
+                if (time > 0) teamSummary[i].totalTime += time;
+            });
+        });
+
+        // 종합 총점 산출
+        teamSummary.forEach(data => {
+            let sum = data.trackScores.reduce((a, b) => a + b, 0);
+            data.grandTotal = Math.round(sum * 10) / 10;
+        });
+
+        // 순위 산출 정렬 규칙: 1. 종합총점 -> 2. 총 완주 횟수 -> 3. 총 이탈 횟수 적은 순 -> 4. 총 소요시간 짧은 순
+        let sorted = [...teamSummary].sort((a, b) => {
+            if (b.grandTotal !== a.grandTotal) return b.grandTotal - a.grandTotal;
+            if (b.completeCount !== a.completeCount) return b.completeCount - a.completeCount;
+            if (a.totalOffTrack !== b.totalOffTrack) return a.totalOffTrack - b.totalOffTrack;
+            return a.totalTime - b.totalTime;
+        });
+
+        sorted.forEach((item, r) => {
+            item.rank = r + 1;
+        });
+
+        renderSummary(teamSummary, sorted);
+    }
+
+    function renderSummary(teamSummary, sorted) {
+        const tbody = document.getElementById('summary-body');
+        tbody.innerHTML = '';
+
+        // sorted 순서대로 표 출력
+        sorted.forEach(data => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="rank-badge rank-${data.rank}">${data.rank}위</span></td>
+                <td class="team-name">${data.teamName}</td>
+                <td>${data.trackScores[0]}점</td>
+                <td>${data.trackScores[1]}점</td>
+                <td>${data.trackScores[2]}점</td>
+                <td>${data.trackScores[3]}점</td>
+                <td>${data.completeCount} / 4 회</td>
+                <td>${data.totalOffTrack} 회</td>
+                <td class="grand-total">${data.grandTotal}점</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateSummaryTable() {
+        calculateAll();
+    }
+
+    function resetAll() {
+        if (confirm("모든 트랙의 경기 기록을 초기화하시겠습니까?")) {
+            initTables();
+        }
+    }
+
+    // 페이지 로드 시 초기화
+    initTables();
+</script>
+
+</body>
+</html>
